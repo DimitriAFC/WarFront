@@ -42,13 +42,24 @@
         <div class="hud-line">STATUS: ONLINE</div>
     </div>
 
+    <!-- Cinematic Deployment Terminal -->
+    <div id="deployment-screen" style="display: none;">
+        <div class="deployment-content">
+            <div class="deployment-header">INITIATING DEPLOYMENT SEQUENCE</div>
+            <div id="deployment-log"></div>
+            <div class="deployment-footer">SYNCING WITH COMMAND CENTER...</div>
+        </div>
+    </div>
+
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
         
         <div id="ui-layer">
             <!-- Main Menu -->
             <div id="main-menu" class="glass-panel menu-screen">
-                <h1 data-text="WarFront">WarFront</h1>
+                <div class="logo-container">
+                    <img src="assets/Logo.png" alt="WarFront Logo" class="menu-logo">
+                </div>
                 
                 <!-- Dynamic Soldier ID -->
                 <div id="soldier-id-badge" class="hologram-card">
@@ -81,6 +92,12 @@
                     <h2>Mission Intel</h2>
                 </div>
                 
+                <!-- Mission Briefing Panel -->
+                <div id="mission-briefing" class="briefing-panel">
+                    <div class="briefing-header">STRATEGIC DIRECTIVE</div>
+                    <div id="briefing-text">SELECT A THEATER OF OPERATIONS TO BEGIN...</div>
+                </div>
+
                 <!-- Carte Section -->
                 <div class="config-section accordion-section active" data-section="map">
                     <div class="section-title">
@@ -101,6 +118,7 @@
                         <div class="title-left">
                             <div class="icon-box green"><svg><use href="#icon-arrow"></use></svg></div>
                             <span>DIFFICULTÉ DES NATIONS</span>
+                            <div id="threat-level-badge" class="threat-nominal">THREAT: NOMINAL</div>
                         </div>
                         <svg class="chevron"><use href="#icon-chevron"></use></svg>
                     </div>

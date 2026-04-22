@@ -1,5 +1,15 @@
 import { MAP_TYPES, AI_LEVELS, MAP_ASSETS, GAME_MODES } from '/shared/constants.js';
 
+const BRIEFINGS = {
+    [MAP_TYPES.WORLD]: "GLOBAL THEATER: Full-scale territorial dominance required. Neutralize all rogue nations with extreme prejudice.",
+    [MAP_TYPES.EUROPE]: "EUROPEAN THEATER: High-density urban zones detected. Strategic hub capture is the priority for logistics control.",
+    [MAP_TYPES.NA]: "NORTH AMERICAN THEATER: Critical infrastructure network identified. Establish dominance over the continental power grid.",
+    [MAP_TYPES.SA]: "SOUTH AMERICAN THEATER: Jungle terrain limiting mobility. Precision strikes on regional capitals are highly recommended.",
+    [MAP_TYPES.ASIA]: "ASIAN THEATER: Massive population hubs present. Resource consumption rates are critical. Secure coastal regions.",
+    [MAP_TYPES.AFRICA]: "AFRICAN THEATER: Vast distances between nodes. Rapid expansion and mobile command units are the key to victory.",
+    [MAP_TYPES.JAPAN]: "JAPANESE THEATER: Isolated archipelago. Naval superiority and island-hopping tactics are essential for total conquest."
+};
+
 export class MenuManager {
     constructor() {
         this.screens = {
@@ -89,9 +99,56 @@ export class MenuManager {
                 container.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 this.config.mapType = val;
+                this.updateBriefing();
             };
             container.appendChild(card);
         });
+        this.updateBriefing();
+    }
+
+    updateBriefing() {
+        const textElement = document.getElementById('briefing-text');
+        const text = BRIEFINGS[this.config.mapType] || BRIEFINGS[MAP_TYPES.WORLD];
+        this.typeEffect(textElement, text);
+    }
+
+    updateThreatLevel() {
+        const badge = document.getElementById('threat-level-badge');
+        badge.className = '';
+        
+        switch(this.config.aiLevel) {
+            case AI_LEVELS.EASY:
+                badge.textContent = "THREAT: NOMINAL";
+                badge.classList.add('threat-nominal');
+                break;
+            case AI_LEVELS.MEDIUM:
+                badge.textContent = "THREAT: STABLE";
+                badge.classList.add('threat-nominal');
+                break;
+            case AI_LEVELS.HARD:
+                badge.textContent = "THREAT: SEVERE";
+                badge.classList.add('threat-severe');
+                break;
+            case AI_LEVELS.IMPOSSIBLE:
+                badge.textContent = "THREAT: APOCALYPTIC";
+                badge.classList.add('threat-apocalyptic');
+                break;
+        }
+    }
+
+    typeEffect(element, text) {
+        let i = 0;
+        element.textContent = '';
+        clearInterval(this.typeInterval);
+        
+        this.typeInterval = setInterval(() => {
+            if (i < text.length) {
+                element.textContent += text.charAt(i);
+                i++;
+            } else {
+                clearInterval(this.typeInterval);
+            }
+        }, 20);
     }
 
     renderDifficultyOptions() {
@@ -137,9 +194,11 @@ export class MenuManager {
                 container.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 this.config.aiLevel = data.level;
+                this.updateThreatLevel();
             };
             container.appendChild(card);
         });
+        this.updateThreatLevel();
     }
 
     initGenericSelection(containerId, onSelect) {

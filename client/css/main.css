@@ -78,54 +78,15 @@ body {
     max-width: 1200px; /* Even more cinematic for maps */
 }
 
-h1 {
-    font-size: 3.5rem;
+.logo-container {
     margin-bottom: 2rem;
-    background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    position: relative;
-    animation: glitch 3s infinite;
+    display: flex;
+    justify-content: center;
 }
 
-h1::before, h1::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.8;
-}
-
-h1::before {
-    color: #0ff;
-    z-index: -1;
-    animation: glitch-anim 2s infinite linear alternate-reverse;
-}
-
-h1::after {
-    color: #f0f;
-    z-index: -2;
-    animation: glitch-anim2 3s infinite linear alternate-reverse;
-}
-
-@keyframes glitch-anim {
-    0% { clip: rect(44px, 450px, 56px, 0); }
-    20% { clip: rect(12px, 450px, 30px, 0); }
-    40% { clip: rect(78px, 450px, 92px, 0); }
-    60% { clip: rect(22px, 450px, 45px, 0); }
-    80% { clip: rect(65px, 450px, 78px, 0); }
-    100% { clip: rect(30px, 450px, 55px, 0); }
-}
-
-@keyframes glitch-anim2 {
-    0% { clip: rect(30px, 450px, 45px, 0); }
-    20% { clip: rect(78px, 450px, 92px, 0); }
-    40% { clip: rect(12px, 450px, 30px, 0); }
-    60% { clip: rect(65px, 450px, 78px, 0); }
-    80% { clip: rect(22px, 450px, 45px, 0); }
-    100% { clip: rect(44px, 450px, 56px, 0); }
+.menu-logo {
+    max-width: 280px;
+    height: auto;
 }
 
 .input-group {
@@ -226,8 +187,8 @@ button {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
+    margin-bottom: 0.3rem;
+    padding: 0.3rem 0.5rem;
     border-bottom: 1px solid rgba(255,255,255,0.05);
     cursor: pointer;
     transition: background 0.2s;
@@ -330,7 +291,7 @@ button {
 
 .option-card img {
     width: 100%;
-    height: 100px;
+    height: 85px;
     object-fit: cover;
     border-radius: 6px;
     background: #0f172a;
@@ -540,4 +501,104 @@ footer {
 
 .primary-btn:hover::after {
     left: 100%;
+}
+
+/* Mission Briefing Panel */
+.briefing-panel {
+    background: rgba(15, 23, 42, 0.4);
+    border-left: 2px solid var(--accent);
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+
+.briefing-header {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 0.2rem;
+    font-weight: 700;
+}
+
+#briefing-text {
+    font-size: 0.75rem;
+    color: var(--text);
+    line-height: 1.3;
+    font-family: monospace;
+    min-height: 2rem;
+}
+
+/* Threat Level Badge */
+#threat-level-badge {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-left: 1rem;
+}
+
+.threat-nominal { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+.threat-severe { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid #eab308; }
+.threat-apocalyptic { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; animation: pulse-red 2s infinite; }
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0px #ef4444; }
+    50% { box-shadow: 0 0 10px #ef4444; }
+    100% { box-shadow: 0 0 0px #ef4444; }
+}
+
+/* Deployment Screen */
+#deployment-screen {
+    position: fixed;
+    inset: 0;
+    background: #020617;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.deployment-content {
+    width: 100%;
+    max-width: 800px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 2rem;
+    font-family: monospace;
+    position: relative;
+}
+
+.deployment-header {
+    color: var(--accent);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    letter-spacing: 4px;
+}
+
+#deployment-log {
+    height: 300px;
+    overflow-y: hidden;
+    color: #4ade80;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.deployment-footer {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+.log-entry {
+    margin-bottom: 0.2rem;
+    border-left: 2px solid rgba(74, 222, 128, 0.3);
+    padding-left: 0.8rem;
 }

@@ -57,14 +57,53 @@ lancerBtn.onclick = () => {
 };
 
 // Start Solo Game
-document.getElementById('start-solo-btn').onclick = () => {
+const startSoloBtn = document.getElementById('start-solo-btn');
+startSoloBtn.onclick = async () => {
+    const nickname = menu.getNickname();
+    if (!nickname) {
+        menu.showScreen('main');
+        return;
+    }
+
+    await startDeploymentEffect();
+    
     connection.createRoom({
-        nickname: menu.getNickname(),
+        nickname,
         mapType: menu.config.mapType,
-        aiLevel: menu.config.aiLevel
+        aiLevel: menu.config.aiLevel,
+        gameMode: menu.config.gameMode
     });
     menu.showScreen('hud');
 };
+
+async function startDeploymentEffect() {
+    const screen = document.getElementById('deployment-screen');
+    const log = document.getElementById('deployment-log');
+    screen.style.display = 'flex';
+    log.innerHTML = '';
+
+    const messages = [
+        "INITIALIZING DEPLOYMENT SEQUENCE...",
+        "ESTABLISHING SECURE PROTOCOLS...",
+        "DECRYPTING REGIONAL SATELLITE DATA...",
+        "SYNCING WITH COMMAND CENTER 01...",
+        "CALIBRATING TACTICAL OVERLAY...",
+        "NATION THREAT LEVEL EVALUATED: " + (menu.config.aiLevel),
+        "DEPLOYING ADVANCED AI AGENTS...",
+        "ALL SYSTEMS NOMINAL. ENGAGING..."
+    ];
+
+    for (const msg of messages) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.textContent = "> " + msg;
+        log.appendChild(entry);
+        await new Promise(r => setTimeout(r, 200));
+    }
+
+    await new Promise(r => setTimeout(r, 500));
+    screen.style.display = 'none';
+}
 
 // State Handlers
 connection.onInitialState = (state) => {
