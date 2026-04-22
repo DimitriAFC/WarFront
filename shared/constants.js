@@ -29,11 +29,11 @@ export const MAP_TYPES = {
 export const MAP_ASSETS = {
   [MAP_TYPES.WORLD]: '/assets/maps/v2/world.png',
   [MAP_TYPES.EUROPE]: '/assets/maps/v2/europe.png',
-  [MAP_TYPES.NA]: '/assets/maps/north_america.png',
-  [MAP_TYPES.SA]: '/assets/maps/south_america.png',
-  [MAP_TYPES.ASIA]: '/assets/maps/asia.png',
-  [MAP_TYPES.AFRICA]: '/assets/maps/africa.png',
-  [MAP_TYPES.JAPAN]: '/assets/maps/japan.png',
+  [MAP_TYPES.NA]: '/assets/maps/v2/north_america.png',
+  [MAP_TYPES.SA]: '/assets/maps/v2/south_america.png',
+  [MAP_TYPES.ASIA]: '/assets/maps/v2/asia.png',
+  [MAP_TYPES.AFRICA]: '/assets/maps/v2/africa.png',
+  [MAP_TYPES.JAPAN]: '/assets/maps/v2/japan.png',
 };
 
 export const AI_LEVELS = {
