@@ -6,6 +6,7 @@ export class Renderer {
         this.ctx = canvas.getContext('2d');
         this.width = 0;
         this.height = 0;
+        this.scale = 1;
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
@@ -18,6 +19,11 @@ export class Renderer {
         this.height = window.innerHeight;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
+        
+        // Calculate scale to fit the 2000x2000 map into the screen
+        const scaleX = this.width / MAP_SIZE;
+        const scaleY = this.height / MAP_SIZE;
+        this.scale = Math.min(scaleX, scaleY) * 0.95; // 0.95 to leave a small margin
     }
 
     setCellsMetadata(cells) {
@@ -26,13 +32,17 @@ export class Renderer {
         });
     }
 
-    /**
-     * Finds which cell is under the mouse coordinates.
-     */
     getCellAt(mouseX, mouseY) {
+        // Adjust mouse coordinates for scaling and centering
+        const offsetX = (this.width - MAP_SIZE * this.scale) / 2;
+        const offsetY = (this.height - MAP_SIZE * this.scale) / 2;
+        
+        const adjX = (mouseX - offsetX) / this.scale;
+        const adjY = (mouseY - offsetY) / this.scale;
+
         for (const [id, meta] of this.cellsMetadata) {
-            const dist = Math.hypot(mouseX - meta.x, mouseY - meta.y);
-            if (dist < 50) return id; // roughly the radius
+            const dist = Math.hypot(adjX - meta.x, adjY - meta.y);
+            if (dist < 60) return id;
         }
         return null;
     }
@@ -42,9 +52,17 @@ export class Renderer {
 
         this.ctx.clearRect(0, 0, this.width, this.height);
         
+        this.ctx.save();
+        
+        // Center the map on the screen
+        const offsetX = (this.width - MAP_SIZE * this.scale) / 2;
+        const offsetY = (this.height - MAP_SIZE * this.scale) / 2;
+        this.ctx.translate(offsetX, offsetY);
+        this.ctx.scale(this.scale, this.scale);
+
         this.drawGrid();
 
-        // 1. Draw Troop Movements (Transfers)
+        // 1. Draw Troop Movements
         if (gameState.transfers) {
             gameState.transfers.forEach(t => {
                 const owner = players.find(p => p.id === t.ownerId);
@@ -63,30 +81,36 @@ export class Renderer {
             
             this.drawCell(meta.x, meta.y, cell.population, color, cell.id === this.selectedCellId, cell.ownerId === myId);
         });
+
+        this.ctx.restore();
     }
 
     drawGrid() {
-        this.ctx.strokeStyle = '#1e293b';
-        this.ctx.lineWidth = 1;
-        const step = 100;
-        for (let x = 0; x < MAP_SIZE; x += step) {
+        this.ctx.strokeStyle = 'rgba(30, 41, 59, 0.5)';
+        this.ctx.lineWidth = 2 / this.scale;
+        const step = 200;
+        for (let x = 0; x <= MAP_SIZE; x += step) {
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, MAP_SIZE);
             this.ctx.stroke();
         }
-        for (let y = 0; y < MAP_SIZE; y += step) {
+        for (let y = 0; y <= MAP_SIZE; y += step) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
             this.ctx.lineTo(MAP_SIZE, y);
             this.ctx.stroke();
         }
+        
+        // Map border
+        this.ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
+        this.ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
     }
 
     drawCell(x, y, pop, color, isSelected, isMine) {
         const radius = 30 + Math.sqrt(pop) * 2;
 
-        this.ctx.shadowBlur = isSelected ? 30 : 15;
+        this.ctx.shadowBlur = (isSelected ? 30 : 15) / this.scale;
         this.ctx.shadowColor = color;
         
         this.ctx.fillStyle = color;
@@ -104,7 +128,7 @@ export class Renderer {
 
         if (isMine) {
             this.ctx.strokeStyle = 'white';
-            this.ctx.lineWidth = 3;
+            this.ctx.lineWidth = 3 / this.scale;
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
             this.ctx.stroke();
@@ -112,8 +136,8 @@ export class Renderer {
 
         if (isSelected) {
             this.ctx.strokeStyle = '#6366f1';
-            this.ctx.lineWidth = 5;
-            this.ctx.setLineDash([10, 5]);
+            this.ctx.lineWidth = 5 / this.scale;
+            this.ctx.setLineDash([10 / this.scale, 5 / this.scale]);
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius + 12, 0, Math.PI * 2);
             this.ctx.stroke();
@@ -121,16 +145,16 @@ export class Renderer {
         }
 
         this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 16px Outfit';
+        this.ctx.font = `bold ${Math.floor(16 / this.scale)}px Outfit`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.fillText(Math.floor(pop), x, y);
     }
 
     drawTroopUnit(x, y, amount, color) {
-        const radius = 10 + Math.sqrt(amount);
+        const radius = (10 + Math.sqrt(amount)) / this.scale;
         
-        this.ctx.shadowBlur = 10;
+        this.ctx.shadowBlur = 10 / this.scale;
         this.ctx.shadowColor = color;
         this.ctx.fillStyle = color;
         
@@ -138,7 +162,6 @@ export class Renderer {
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // Simple inner polish
         this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
         this.ctx.beginPath();
         this.ctx.arc(x - radius/4, y - radius/4, radius/2, 0, Math.PI * 2);

@@ -27,8 +27,8 @@ export const MAP_TYPES = {
 };
 
 export const MAP_ASSETS = {
-  [MAP_TYPES.WORLD]: '/assets/maps/world.png',
-  [MAP_TYPES.EUROPE]: '/assets/maps/europe.png',
+  [MAP_TYPES.WORLD]: '/assets/maps/v2/world.png',
+  [MAP_TYPES.EUROPE]: '/assets/maps/v2/europe.png',
   [MAP_TYPES.NA]: '/assets/maps/north_america.png',
   [MAP_TYPES.SA]: '/assets/maps/south_america.png',
   [MAP_TYPES.ASIA]: '/assets/maps/asia.png',
@@ -38,9 +38,15 @@ export const MAP_ASSETS = {
 
 export const AI_LEVELS = {
   NONE: 'None',
-  EASY: 'Easy',
-  MEDIUM: 'Medium',
-  HARD: 'Hard',
+  EASY: 'FACILE',
+  MEDIUM: 'MOYEN',
+  HARD: 'DIFFICILE',
+  IMPOSSIBLE: 'IMPOSSIBLE',
+};
+
+export const GAME_MODES = {
+  FFA: 'CHACUN POUR SOI',
+  TEAMS: 'ÉQUIPES',
 };
 
 export const INITIAL_POPULATION = 10;
