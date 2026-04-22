@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WarFront | Territorial conquest</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <div id="ui-layer">
+            <!-- Main Menu (Everything on one screen for better visibility) -->
+            <div id="main-menu" class="glass-panel menu-screen">
+                <h1>WarFront</h1>
+                
+                <div class="input-group">
+                    <input type="text" id="nickname-input" placeholder="Soldier Name" maxlength="15">
+                    <div id="nickname-error" class="error-msg" style="display: none;">Please enter a nickname</div>
+                </div>
+
+                <div class="config-section">
+                    <h3>Game Mode</h3>
+                    <div id="mode-selection" class="grid-options" style="grid-template-columns: 1fr;">
+                        <div class="option-card selected" data-mode="solo">SOLO CONQUEST</div>
+                    </div>
+                </div>
+
+                <div class="menu-options" style="margin-top: 1rem;">
+                    <button id="lancer-btn" class="primary-btn">LANCER</button>
+                </div>
+            </div>
+
+            <!-- Configuration Step (Solo/Sandbox specific - Maps/AI) -->
+            <div id="solo-config" class="glass-panel menu-screen wide" style="display: none;">
+                <div class="menu-header">
+                    <button class="back-btn">←</button>
+                    <h2>Mission Intel</h2>
+                </div>
+                
+                <div class="config-section">
+                    <h3 style="color: var(--text-dim); margin-bottom: 0.5rem; letter-spacing: 2px;">FEATURED</h3>
+                    <h3>Select Theatre</h3>
+                    <div id="map-selection" class="grid-options"></div>
+                </div>
+
+                <div id="ai-section" class="config-section">
+                    <h3>AI Strategy</h3>
+                    <div id="ai-selection" class="grid-options"></div>
+                </div>
+
+                <button id="start-solo-btn" class="primary-btn">ENGAGE</button>
+            </div>
+
+            <!-- Multiplayer Lobby -->
+            <div id="multi-lobby" class="glass-panel menu-screen" style="display: none;">
+                <div class="menu-header">
+                    <button class="back-btn">←</button>
+                    <h2>War Room</h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="room-id-input" placeholder="Room Code (Optional)">
+                    <button id="join-room-btn" class="primary-btn">JOIN OPERATIONAL THEATRE</button>
+                </div>
+            </div>
+
+            <div id="hud" style="display: none;">
+                <div class="stats glass-panel">
+                    <div id="player-status">
+                        <span class="color-dot"></span>
+                        <span id="player-name"></span>
+                    </div>
+                    <div id="room-info">Room: <span id="room-display"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 WarFront Command - Tactical Conquest MVP</p>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
