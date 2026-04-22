@@ -1,263 +1,302 @@
-import { GROWTH_RATE, MAX_CELL_POPULATION, MAP_TYPES, AI_LEVELS, UNIT_SPEED, TROOP_PERCENTAGE } from '../shared/constants.js';
+import {
+  GRID_WIDTH, GRID_HEIGHT, GROWTH_RATE, CAPTURE_COST_NEUTRAL,
+  CAPTURE_COST_ENEMY, MAX_EXPANSION_PER_TICK, AI_LEVELS,
+  INITIAL_POPULATION, SPAWN_RADIUS, MAP_TYPES
+} from '../shared/constants.js';
 
 export class Game {
   constructor(config = {}) {
     this.id = config.id || Math.random().toString(36).substring(7);
-    this.mapType = config.mapType || MAP_TYPES.GRID;
+    this.mapType = config.mapType || MAP_TYPES.WORLD;
     this.aiLevel = config.aiLevel || AI_LEVELS.NONE;
-    this.players = new Map();
-    this.cells = [];
-    this.transfers = []; // ongoing troop movements
-    this.lastTickTime = Date.now();
-    
-    this.initMap();
+    this.players = new Map();       // id -> { id, nickname, color, isAI, population, territoryCount, targetX, targetY, index }
+    this.playerIndex = 0;           // Auto-increment for compact grid encoding
+
+    // Grid: flat array, 0 = neutral, N = player index
+    this.grid = new Array(GRID_WIDTH * GRID_HEIGHT).fill(0);
+    this.changedCells = [];         // Cells changed since last state push
+
     if (this.aiLevel !== AI_LEVELS.NONE) {
       this.initAI();
     }
   }
 
-  initMap() {
-    switch(this.mapType) {
-      case MAP_TYPES.WORLD: this.generateWorldMap(); break;
-      case MAP_TYPES.EUROPE: this.generateEuropeMap(); break;
-      case MAP_TYPES.NA: this.generateNAMap(); break;
-      case MAP_TYPES.SA: this.generateSAMap(); break;
-      case MAP_TYPES.ASIA: this.generateAsiaMap(); break;
-      case MAP_TYPES.AFRICA: this.generateAfricaMap(); break;
-      case MAP_TYPES.JAPAN: this.generateJapanMap(); break;
-      default: this.generateGridMap();
-    }
+  // Get grid value at (x, y)
+  getCell(x, y) {
+    if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) return -1;
+    return this.grid[y * GRID_WIDTH + x];
   }
 
-  generateGridMap() {
-    let idCounter = 0;
-    const spacing = 150;
-    for (let x = spacing; x < 2000; x += spacing) {
-      for (let y = spacing; y < 2000; y += spacing) {
-        this.addCell(idCounter++, x, y);
+  // Set grid value at (x, y)
+  setCell(x, y, ownerIndex) {
+    if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) return;
+    this.grid[y * GRID_WIDTH + x] = ownerIndex;
+    this.changedCells.push([x, y, ownerIndex]);
+  }
+
+  // Spawn a player at a position with a cluster of cells
+  spawnPlayer(playerData, cx, cy) {
+    for (let dy = -SPAWN_RADIUS; dy <= SPAWN_RADIUS; dy++) {
+      for (let dx = -SPAWN_RADIUS; dx <= SPAWN_RADIUS; dx++) {
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT) {
+          this.setCell(nx, ny, playerData.index);
+        }
       }
     }
+    playerData.territoryCount = this.countTerritory(playerData.index);
   }
 
-  generateWorldMap() {
-    const points = [
-      { x: 400, y: 800 }, { x: 950, y: 600 }, { x: 1750, y: 850 },
-      { x: 1700, y: 1600 }, { x: 650, y: 1500 }, { x: 1050, y: 1700 },
-      { x: 1100, y: 1000 }, { x: 1400, y: 1100 }, { x: 1000, y: 700 },
-      { x: 1200, y: 600 }, { x: 1600, y: 800 }, { x: 200, y: 600 },
-      { x: 1300, y: 400 }, { x: 800, y: 1100 }, { x: 1500, y: 1400 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
+  countTerritory(playerIndex) {
+    let count = 0;
+    for (let i = 0; i < this.grid.length; i++) {
+      if (this.grid[i] === playerIndex) count++;
+    }
+    return count;
   }
 
-  generateEuropeMap() {
-    const points = [
-      { x: 500, y: 500 }, { x: 600, y: 700 }, { x: 900, y: 600 },
-      { x: 1000, y: 1100 }, { x: 400, y: 1200 }, { x: 1600, y: 500 },
-      { x: 1100, y: 300 }, { x: 1300, y: 1300 }, { x: 1400, y: 700 },
-      { x: 1100, y: 650 }, { x: 1000, y: 800 }, { x: 650, y: 650 },
-      { x: 800, y: 450 }, { x: 1400, y: 400 }, { x: 1200, y: 1000 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
-  }
-
-  generateNAMap() {
-    const points = [
-      { x: 400, y: 400 }, { x: 700, y: 300 }, { x: 1000, y: 600 },
-      { x: 1200, y: 800 }, { x: 1000, y: 1200 }, { x: 600, y: 1000 },
-      { x: 300, y: 800 }, { x: 500, y: 1400 }, { x: 1400, y: 500 },
-      { x: 1500, y: 1000 }, { x: 800, y: 1600 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
-  }
-
-  generateSAMap() {
-    const points = [
-      { x: 800, y: 400 }, { x: 1200, y: 600 }, { x: 1000, y: 1000 },
-      { x: 1100, y: 1500 }, { x: 800, y: 1800 }, { x: 600, y: 1400 },
-      { x: 500, y: 800 }, { x: 1400, y: 900 }, { x: 900, y: 1200 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
-  }
-
-  generateAsiaMap() {
-    const points = [
-      { x: 400, y: 600 }, { x: 800, y: 400 }, { x: 1200, y: 600 },
-      { x: 1600, y: 400 }, { x: 1800, y: 800 }, { x: 1400, y: 1000 },
-      { x: 1000, y: 1200 }, { x: 600, y: 1000 }, { x: 1200, y: 1400 },
-      { x: 1550, y: 1500 }, { x: 1750, y: 1200 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
-  }
-
-  generateAfricaMap() {
-    const points = [
-      { x: 1000, y: 400 }, { x: 600, y: 600 }, { x: 400, y: 1000 },
-      { x: 600, y: 1400 }, { x: 1000, y: 1800 }, { x: 1400, y: 1400 },
-      { x: 1600, y: 1000 }, { x: 1300, y: 600 }, { x: 1000, y: 1000 },
-      { x: 800, y: 1200 }, { x: 1200, y: 1200 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
-  }
-
-  generateJapanMap() {
-    const points = [
-      { x: 1600, y: 400 }, { x: 1400, y: 600 }, { x: 1200, y: 800 },
-      { x: 1000, y: 1000 }, { x: 800, y: 1200 }, { x: 600, y: 1400 },
-      { x: 400, y: 1600 }, { x: 700, y: 1000 }, { x: 1100, y: 700 }
-    ];
-    points.forEach((p, i) => this.addCell(i, p.x, p.y));
-  }
-
-  addCell(id, x, y) {
-    this.cells.push({
-      id, x, y, ownerId: null,
-      population: Math.floor(Math.random() * 50) + 10,
-    });
+  // Find a random open spawn point
+  findSpawnPoint() {
+    let attempts = 0;
+    while (attempts < 100) {
+      const x = Math.floor(Math.random() * (GRID_WIDTH - 20)) + 10;
+      const y = Math.floor(Math.random() * (GRID_HEIGHT - 20)) + 10;
+      // Check area is neutral
+      let clear = true;
+      for (let dy = -5; dy <= 5; dy++) {
+        for (let dx = -5; dx <= 5; dx++) {
+          if (this.getCell(x + dx, y + dy) !== 0) { clear = false; break; }
+        }
+        if (!clear) break;
+      }
+      if (clear) return { x, y };
+      attempts++;
+    }
+    // Fallback: random position
+    return { x: Math.floor(Math.random() * GRID_WIDTH), y: Math.floor(Math.random() * GRID_HEIGHT) };
   }
 
   initAI() {
     const aiId = 'ai_' + Math.random().toString(36).substring(7);
-    this.players.set(aiId, { id: aiId, nickname: `Bot (${this.aiLevel})`, color: '#ffffff', isAI: true });
-    // AI Start cell
-    const cell = this.cells.filter(c => c.ownerId === null)[Math.floor(Math.random() * this.cells.length)];
-    if (cell) {
-      cell.ownerId = aiId;
-      cell.population = 50;
-    }
+    this.playerIndex++;
+    const aiPlayer = {
+      id: aiId, nickname: `Bot`, color: '#ffffff', isAI: true,
+      population: INITIAL_POPULATION, territoryCount: 0,
+      targetX: GRID_WIDTH / 2, targetY: GRID_HEIGHT / 2,
+      index: this.playerIndex
+    };
+    this.players.set(aiId, aiPlayer);
+    const spawn = this.findSpawnPoint();
+    this.spawnPlayer(aiPlayer, spawn.x, spawn.y);
   }
 
   addPlayer(id, nickname, color) {
-    this.players.set(id, { id, nickname, color, isAI: false });
-    const neutralCells = this.cells.filter(c => c.ownerId === null);
-    if (neutralCells.length > 0) {
-      const startCell = neutralCells[Math.floor(Math.random() * neutralCells.length)];
-      startCell.ownerId = id;
-      startCell.population = 50;
-    }
+    this.playerIndex++;
+    const player = {
+      id, nickname, color, isAI: false,
+      population: INITIAL_POPULATION, territoryCount: 0,
+      targetX: GRID_WIDTH / 2, targetY: GRID_HEIGHT / 2,
+      index: this.playerIndex
+    };
+    this.players.set(id, player);
+    const spawn = this.findSpawnPoint();
+    this.spawnPlayer(player, spawn.x, spawn.y);
   }
 
   removePlayer(id) {
+    const player = this.players.get(id);
+    if (!player) return;
+    // Clear all cells owned by this player
+    for (let i = 0; i < this.grid.length; i++) {
+      if (this.grid[i] === player.index) {
+        this.grid[i] = 0;
+        const x = i % GRID_WIDTH;
+        const y = Math.floor(i / GRID_WIDTH);
+        this.changedCells.push([x, y, 0]);
+      }
+    }
     this.players.delete(id);
-    this.cells.forEach(cell => { if (cell.ownerId === id) cell.ownerId = null; });
-    this.transfers = this.transfers.filter(t => t.ownerId !== id);
   }
 
-  handleSendTroops(playerId, sourceId, targetId) {
-    const source = this.cells.find(c => c.id === sourceId);
-    const target = this.cells.find(c => c.id === targetId);
-    
-    if (!source || !target || source.ownerId !== playerId || sourceId === targetId) return;
-    if (source.population < 10) return;
+  setTarget(playerId, targetX, targetY) {
+    const player = this.players.get(playerId);
+    if (player) {
+      player.targetX = Math.max(0, Math.min(GRID_WIDTH - 1, targetX));
+      player.targetY = Math.max(0, Math.min(GRID_HEIGHT - 1, targetY));
+    }
+  }
 
-    const amount = Math.floor(source.population * TROOP_PERCENTAGE);
-    source.population -= amount;
-
-    const distance = Math.hypot(target.x - source.x, target.y - source.y);
-
-    this.transfers.push({
-      id: Math.random().toString(36).substring(7),
-      ownerId: playerId,
-      sourceId,
-      targetId,
-      amount,
-      x: source.x,
-      y: source.y,
-      targetX: target.x,
-      targetY: target.y,
-      progress: 0,
-      totalDistance: distance
-    });
+  // Find all border cells for a given player index
+  findBorderCells(playerIndex) {
+    const borders = [];
+    for (let y = 0; y < GRID_HEIGHT; y++) {
+      for (let x = 0; x < GRID_WIDTH; x++) {
+        if (this.grid[y * GRID_WIDTH + x] !== playerIndex) continue;
+        // Check if at least one neighbor is different
+        const neighbors = [
+          this.getCell(x - 1, y), this.getCell(x + 1, y),
+          this.getCell(x, y - 1), this.getCell(x, y + 1)
+        ];
+        if (neighbors.some(n => n !== playerIndex && n !== -1)) {
+          borders.push({ x, y });
+        }
+      }
+    }
+    return borders;
   }
 
   update() {
-    // 1. Population Growth
-    this.cells.forEach(cell => {
-      if (cell.ownerId !== null && cell.population < MAX_CELL_POPULATION) cell.population += GROWTH_RATE;
-    });
+    this.changedCells = [];
 
-    // 2. Transfer Movement
-    this.transfers.forEach((t, index) => {
-      t.progress += UNIT_SPEED;
-      
-      // Calculate current position
-      const ratio = t.progress / t.totalDistance;
-      t.x = t.x + (t.targetX - t.x) * (UNIT_SPEED / (t.totalDistance - (t.progress - UNIT_SPEED))); // Linear interpolation step
+    // 1. Population Growth — proportional to territory
+    for (const player of this.players.values()) {
+      player.territoryCount = this.countTerritory(player.index);
+      player.population += player.territoryCount * GROWTH_RATE;
+    }
 
-      if (t.progress >= t.totalDistance) {
-        this.resolveTransfer(t);
-        this.transfers.splice(index, 1);
-      }
-    });
+    // 2. Auto-expansion for each player
+    for (const player of this.players.values()) {
+      this.expandPlayer(player);
+    }
 
-    // 3. AI Tick
-    if (this.aiLevel !== AI_LEVELS.NONE) this.updateAI();
+    // 3. AI logic
+    if (this.aiLevel !== AI_LEVELS.NONE) {
+      this.updateAI();
+    }
 
-    this.lastTickTime = Date.now();
     return this.getState();
   }
 
-  resolveTransfer(t) {
-    const target = this.cells.find(c => c.id === t.targetId);
-    if (!target) return;
+  expandPlayer(player) {
+    if (player.population < CAPTURE_COST_NEUTRAL) return;
 
-    if (target.ownerId === t.ownerId) {
-      target.population += t.amount;
-    } else {
-      target.population -= t.amount;
-      if (target.population < 0) {
-        target.population = Math.abs(target.population);
-        target.ownerId = t.ownerId;
+    const borders = this.findBorderCells(player.index);
+    if (borders.length === 0) return;
+
+    // Sort by distance to target (closest first = prioritized expansion)
+    borders.sort((a, b) => {
+      const distA = Math.hypot(a.x - player.targetX, a.y - player.targetY);
+      const distB = Math.hypot(b.x - player.targetX, b.y - player.targetY);
+      return distA - distB;
+    });
+
+    let expansions = 0;
+    const maxExpansions = MAX_EXPANSION_PER_TICK;
+
+    for (const border of borders) {
+      if (expansions >= maxExpansions || player.population < CAPTURE_COST_NEUTRAL) break;
+
+      // Try each neighbor of this border cell
+      const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+      // Shuffle directions for organic look
+      for (let i = dirs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+      }
+
+      for (const [dx, dy] of dirs) {
+        if (expansions >= maxExpansions || player.population < CAPTURE_COST_NEUTRAL) break;
+        const nx = border.x + dx;
+        const ny = border.y + dy;
+        const neighborOwner = this.getCell(nx, ny);
+
+        if (neighborOwner === -1 || neighborOwner === player.index) continue;
+
+        if (neighborOwner === 0) {
+          // Neutral cell
+          player.population -= CAPTURE_COST_NEUTRAL;
+          this.setCell(nx, ny, player.index);
+          expansions++;
+        } else {
+          // Enemy cell
+          if (player.population >= CAPTURE_COST_ENEMY) {
+            player.population -= CAPTURE_COST_ENEMY;
+            this.setCell(nx, ny, player.index);
+            expansions++;
+          }
+        }
       }
     }
   }
 
   updateAI() {
-    const aiPlayer = Array.from(this.players.values()).find(p => p.isAI);
-    if (!aiPlayer || Math.random() > 0.05) return;
-    const myCells = this.cells.filter(c => c.ownerId === aiPlayer.id && c.population > 30);
-    if (myCells.length === 0) return;
-    const source = myCells[Math.floor(Math.random() * myCells.length)];
-    
-    // AI Target logic
-    let target = null;
-    if (this.aiLevel === AI_LEVELS.EASY) {
-      target = this.cells[Math.floor(Math.random() * this.cells.length)];
-    } else {
-      // Find closest or weakest neighbor
-      target = this.cells
-        .filter(c => c.ownerId !== aiPlayer.id)
-        .sort((a, b) => {
-          const distA = Math.hypot(a.x - source.x, a.y - source.y);
-          const distB = Math.hypot(b.x - source.x, b.y - source.y);
-          return (a.population + distA*0.1) - (b.population + distB*0.1);
-        })[0];
-    }
+    for (const player of this.players.values()) {
+      if (!player.isAI) continue;
 
-    if (target && target.id !== source.id) {
-      this.handleSendTroops(aiPlayer.id, source.id, target.id);
+      // Change target periodically
+      const changeChance = this.aiLevel === AI_LEVELS.EASY ? 0.01 :
+                           this.aiLevel === AI_LEVELS.MEDIUM ? 0.02 :
+                           this.aiLevel === AI_LEVELS.HARD ? 0.03 : 0.05;
+
+      if (Math.random() < changeChance) {
+        if (this.aiLevel === AI_LEVELS.EASY) {
+          // Random target
+          player.targetX = Math.floor(Math.random() * GRID_WIDTH);
+          player.targetY = Math.floor(Math.random() * GRID_HEIGHT);
+        } else {
+          // Target nearest human player territory
+          let bestTarget = null;
+          let bestDist = Infinity;
+
+          for (const other of this.players.values()) {
+            if (other.id === player.id || other.isAI) continue;
+            // Find center of other player's territory
+            let sumX = 0, sumY = 0, count = 0;
+            for (let i = 0; i < this.grid.length; i++) {
+              if (this.grid[i] === other.index) {
+                sumX += i % GRID_WIDTH;
+                sumY += Math.floor(i / GRID_WIDTH);
+                count++;
+              }
+            }
+            if (count > 0) {
+              const cx = sumX / count;
+              const cy = sumY / count;
+              const aiCenterX = player.targetX;
+              const aiCenterY = player.targetY;
+              const dist = Math.hypot(cx - aiCenterX, cy - aiCenterY);
+              if (dist < bestDist) {
+                bestDist = dist;
+                bestTarget = { x: cx, y: cy };
+              }
+            }
+          }
+
+          if (bestTarget) {
+            player.targetX = Math.floor(bestTarget.x);
+            player.targetY = Math.floor(bestTarget.y);
+          } else {
+            player.targetX = Math.floor(Math.random() * GRID_WIDTH);
+            player.targetY = Math.floor(Math.random() * GRID_HEIGHT);
+          }
+        }
+      }
     }
   }
 
   getState() {
     return {
-      players: Array.from(this.players.values()).map(p => ({ id: p.id, nickname: p.nickname, color: p.color })),
-      cells: this.cells.map(c => ({ id: c.id, ownerId: c.ownerId, population: Math.floor(c.population) })),
-      transfers: this.transfers.map(t => ({
-        id: t.id,
-        ownerId: t.ownerId,
-        x: Math.floor(t.x),
-        y: Math.floor(t.y),
-        amount: t.amount
-      }))
+      players: Array.from(this.players.values()).map(p => ({
+        id: p.id, nickname: p.nickname, color: p.color,
+        index: p.index, population: Math.floor(p.population),
+        territoryCount: p.territoryCount
+      })),
+      changes: this.changedCells
     };
   }
 
   getFullState() {
-    return { 
-      players: Array.from(this.players.values()).map(p => ({ id: p.id, nickname: p.nickname, color: p.color })), 
-      cells: this.cells,
-      transfers: [] 
+    return {
+      mapType: this.mapType,
+      gridWidth: GRID_WIDTH,
+      gridHeight: GRID_HEIGHT,
+      grid: [...this.grid],
+      players: Array.from(this.players.values()).map(p => ({
+        id: p.id, nickname: p.nickname, color: p.color,
+        index: p.index, population: Math.floor(p.population),
+        territoryCount: p.territoryCount
+      }))
     };
   }
 }

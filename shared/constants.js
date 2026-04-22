@@ -1,9 +1,14 @@
 /**
  * Shared game constants for both Client and Server.
+ * v2 — Pixel Grid Conquest System
  */
 
-export const MAP_SIZE = 2000;
-export const TICK_RATE = 15; // 15 ticks per second
+export const MAP_SIZE = 2000;       // Display size in pixels
+export const GRID_WIDTH = 200;      // Grid columns
+export const GRID_HEIGHT = 200;     // Grid rows
+export const CELL_SIZE = MAP_SIZE / GRID_WIDTH; // 10px per cell
+
+export const TICK_RATE = 15;
 export const TICK_INTERVAL = 1000 / TICK_RATE;
 
 export const PLAYER_COLORS = [
@@ -49,19 +54,20 @@ export const GAME_MODES = {
   TEAMS: 'ÉQUIPES',
 };
 
-export const INITIAL_POPULATION = 10;
-export const MAX_CELL_POPULATION = 500;
-export const GROWTH_RATE = 0.5;
-export const UNIT_SPEED = 2.5; // Pixels per tick
-export const TROOP_PERCENTAGE = 0.5; // Send 50% by default
+// Gameplay tuning
+export const GROWTH_RATE = 0.15;           // Pop gained per owned cell per tick
+export const CAPTURE_COST_NEUTRAL = 1;     // Pop cost to capture a neutral cell
+export const CAPTURE_COST_ENEMY = 2;       // Pop cost to capture an enemy cell
+export const MAX_EXPANSION_PER_TICK = 6;   // Max cells a player can capture per tick
+export const INITIAL_POPULATION = 50;      // Starting population
+export const SPAWN_RADIUS = 2;             // Radius of starting territory (5x5 block)
 
 export const MSG_TYPES = {
   CREATE_ROOM: 'create_room',
   JOIN_ROOM: 'join_room',
-  ROOM_LIST: 'room_list',
   INITIAL_STATE: 'initial_state',
   GAME_UPDATE: 'game_update',
-  SEND_TROOPS: 'send_troops',
+  SET_TARGET: 'set_target',
   PLAYER_JOINED: 'player_joined',
   PLAYER_LEFT: 'player_left',
   ERROR: 'error',

@@ -1,9 +1,8 @@
-import { MSG_TYPES, MAP_TYPES, AI_LEVELS } from '/shared/constants.js';
+import { MSG_TYPES } from '/shared/constants.js';
 
 export class Connection {
     constructor() {
         this.socket = io();
-        this.gameState = null;
         this.myId = null;
         this.onStateUpdate = null;
         this.onInitialState = null;
@@ -18,12 +17,10 @@ export class Connection {
 
         this.socket.on(MSG_TYPES.INITIAL_STATE, (state) => {
             console.log('Received initial state for room:', state.roomId);
-            this.gameState = state;
             if (this.onInitialState) this.onInitialState(state);
         });
 
         this.socket.on(MSG_TYPES.GAME_UPDATE, (state) => {
-            this.gameState = state;
             if (this.onStateUpdate) this.onStateUpdate(state);
         });
 
@@ -40,7 +37,7 @@ export class Connection {
         this.socket.emit(MSG_TYPES.JOIN_ROOM, { roomId, nickname });
     }
 
-    sendTroops(sourceId, targetId) {
-        this.socket.emit(MSG_TYPES.SEND_TROOPS, { sourceId, targetId });
+    setTarget(targetX, targetY) {
+        this.socket.emit(MSG_TYPES.SET_TARGET, { targetX, targetY });
     }
 }

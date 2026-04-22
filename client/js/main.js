@@ -14,27 +14,17 @@ const lancerBtn = document.getElementById('lancer-btn');
 const nicknameError = document.getElementById('nickname-error');
 const aiSection = document.getElementById('ai-section');
 
-let currentGameState = null;
+let currentPlayers = [];
+let gameActive = false;
 
-// Interaction logic
+// Click on map = set expansion target
 canvas.onclick = (e) => {
-    if (!currentGameState) return;
+    if (!gameActive) return;
 
-    const cellId = renderer.getCellAt(e.clientX, e.clientY);
-    
-    if (cellId !== null) {
-        // If clicking a cell you own
-        const cell = currentGameState.cells.find(c => c.id === cellId);
-        
-        if (cell.ownerId === connection.myId) {
-            renderer.selectedCellId = cellId;
-        } else if (renderer.selectedCellId !== null) {
-            // If already have a selection, attack this target
-            connection.sendTroops(renderer.selectedCellId, cellId);
-            renderer.selectedCellId = null; // Clear selection after attack order
-        }
-    } else {
-        renderer.selectedCellId = null;
+    const grid = renderer.screenToGrid(e.clientX, e.clientY);
+    if (grid.x >= 0 && grid.x < 200 && grid.y >= 0 && grid.y < 200) {
+        renderer.setTarget(grid.x, grid.y);
+        connection.setTarget(grid.x, grid.y);
     }
 };
 
@@ -85,11 +75,13 @@ async function startDeploymentEffect() {
     const messages = [
         "INITIALIZING DEPLOYMENT SEQUENCE...",
         "ESTABLISHING SECURE PROTOCOLS...",
+        "GENERATING TERRITORIAL GRID [200x200]...",
         "DECRYPTING REGIONAL SATELLITE DATA...",
         "SYNCING WITH COMMAND CENTER 01...",
         "CALIBRATING TACTICAL OVERLAY...",
         "NATION THREAT LEVEL EVALUATED: " + (menu.config.aiLevel),
         "DEPLOYING ADVANCED AI AGENTS...",
+        "GRID ONLINE. EXPANSION AUTHORIZED.",
         "ALL SYSTEMS NOMINAL. ENGAGING..."
     ];
 
@@ -98,16 +90,20 @@ async function startDeploymentEffect() {
         entry.className = 'log-entry';
         entry.textContent = "> " + msg;
         log.appendChild(entry);
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 180));
     }
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
     screen.style.display = 'none';
 }
 
-// State Handlers
+// Initial State — full grid received
 connection.onInitialState = (state) => {
-    renderer.setCellsMetadata(state.cells);
+    gameActive = true;
+    renderer.loadMapImage(state.mapType);
+    renderer.initGrid(state.grid, state.players);
+    currentPlayers = state.players;
+
     document.getElementById('room-display').textContent = state.roomId;
     
     const me = state.players.find(p => p.id === connection.myId);
@@ -117,12 +113,19 @@ connection.onInitialState = (state) => {
     }
 };
 
+// Delta updates — only changed cells
 connection.onStateUpdate = (state) => {
-    currentGameState = state;
+    if (state.changes && state.changes.length > 0) {
+        renderer.applyChanges(state.changes, state.players);
+    }
+    currentPlayers = state.players;
 };
 
+// Render loop
 function loop() {
-    renderer.draw(currentGameState, currentGameState?.players || [], connection.myId);
+    if (gameActive) {
+        renderer.draw(currentPlayers, connection.myId);
+    }
     requestAnimationFrame(loop);
 }
 
