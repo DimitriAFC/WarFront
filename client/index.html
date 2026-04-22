@@ -30,14 +30,33 @@
         </symbol>
     </svg>
 
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Technical HUD Overlays -->
+    <div class="hud-overlay top-left">
+        <div class="hud-line">SATELLITE SYNC: ACTIVE</div>
+        <div class="hud-line">ENCRYPTION: 256-BIT RSA</div>
+    </div>
+    <div class="hud-overlay top-right">
+        <div class="hud-line">LOC: DETECTED</div>
+        <div class="hud-line">STATUS: ONLINE</div>
+    </div>
+
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
         
         <div id="ui-layer">
             <!-- Main Menu -->
             <div id="main-menu" class="glass-panel menu-screen">
-                <h1>WarFront</h1>
+                <h1 data-text="WarFront">WarFront</h1>
                 
+                <!-- Dynamic Soldier ID -->
+                <div id="soldier-id-badge" class="hologram-card">
+                    <div class="badge-label">SOLDIER IDENTIFICATION</div>
+                    <div id="badge-name">UNKNOWN</div>
+                    <div class="badge-rank">RECRUIT</div>
+                </div>
+
                 <div class="input-group">
                     <input type="text" id="nickname-input" placeholder="Soldier Name" maxlength="15">
                     <div id="nickname-error" class="error-msg" style="display: none;">Veuillez entrer un pseudo</div>
@@ -91,7 +110,7 @@
                 </div>
 
                 <!-- Mode Section -->
-                <div class="config-section accordion-section" data-section="mode">
+                <div id="game-mode-section" class="config-section accordion-section" data-section="mode">
                     <div class="section-title">
                         <div class="title-left">
                             <div class="icon-box purple"><svg><use href="#icon-book"></use></svg></div>

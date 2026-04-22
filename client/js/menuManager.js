@@ -26,11 +26,21 @@ export class MenuManager {
         this.initModeSelection();
         this.initAccordion();
 
+        const nickInput = document.getElementById('nickname-input');
+        const badgeName = document.getElementById('badge-name');
+
         // Load saved nickname
         const savedNick = localStorage.getItem('warfront_nickname');
         if (savedNick) {
-            document.getElementById('nickname-input').value = savedNick;
+            nickInput.value = savedNick;
+            badgeName.textContent = savedNick.toUpperCase();
         }
+
+        // Reactive ID Badge
+        nickInput.oninput = () => {
+            const val = nickInput.value.trim();
+            badgeName.textContent = val ? val.toUpperCase() : 'UNKNOWN';
+        };
 
         document.querySelectorAll('.back-btn').forEach(btn => {
             btn.onclick = () => this.showScreen('main');

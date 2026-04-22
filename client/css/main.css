@@ -20,6 +20,17 @@ body {
     font-family: 'Outfit', sans-serif;
     overflow: hidden;
     height: 100vh;
+    position: relative;
+}
+
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
 }
 
 #game-container {
@@ -73,6 +84,48 @@ h1 {
     background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    position: relative;
+    animation: glitch 3s infinite;
+}
+
+h1::before, h1::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+}
+
+h1::before {
+    color: #0ff;
+    z-index: -1;
+    animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+h1::after {
+    color: #f0f;
+    z-index: -2;
+    animation: glitch-anim2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+    0% { clip: rect(44px, 450px, 56px, 0); }
+    20% { clip: rect(12px, 450px, 30px, 0); }
+    40% { clip: rect(78px, 450px, 92px, 0); }
+    60% { clip: rect(22px, 450px, 45px, 0); }
+    80% { clip: rect(65px, 450px, 78px, 0); }
+    100% { clip: rect(30px, 450px, 55px, 0); }
+}
+
+@keyframes glitch-anim2 {
+    0% { clip: rect(30px, 450px, 45px, 0); }
+    20% { clip: rect(78px, 450px, 92px, 0); }
+    40% { clip: rect(12px, 450px, 30px, 0); }
+    60% { clip: rect(65px, 450px, 78px, 0); }
+    80% { clip: rect(22px, 450px, 45px, 0); }
+    100% { clip: rect(44px, 450px, 56px, 0); }
 }
 
 .input-group {
@@ -401,4 +454,90 @@ footer {
 @keyframes pulse-flame {
     from { filter: drop-shadow(0 0 5px #f97316); transform: scale(1); }
     to { filter: drop-shadow(0 0 15px #f97316); transform: scale(1.1); }
+}
+/* HUD Overlays */
+.hud-overlay {
+    position: fixed;
+    padding: 1.5rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    opacity: 0.4;
+    z-index: 5;
+    pointer-events: none;
+    letter-spacing: 1px;
+}
+
+.top-left { top: 0; left: 0; }
+.top-right { top: 0; right: 0; text-align: right; }
+
+.hud-line {
+    margin-bottom: 0.3rem;
+}
+
+/* Hologram Soldier ID */
+#soldier-id-badge {
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+#soldier-id-badge::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+    animation: scan-line 2s linear infinite;
+    opacity: 0.5;
+}
+
+@keyframes scan-line {
+    0% { top: 0; }
+    100% { top: 100%; }
+}
+
+.badge-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 0.3rem;
+}
+
+#badge-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.badge-rank {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+}
+
+.primary-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.primary-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg);
+    transition: 0.5s;
+    left: -100%;
+}
+
+.primary-btn:hover::after {
+    left: 100%;
 }

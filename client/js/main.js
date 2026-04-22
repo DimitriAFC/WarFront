@@ -1,11 +1,14 @@
 import { Connection } from './connection.js';
 import { Renderer } from './renderer.js';
 import { MenuManager } from './menuManager.js';
+import { BackgroundRenderer } from './backgroundRenderer.js';
 
 const canvas = document.getElementById('game-canvas');
 const connection = new Connection();
 const renderer = new Renderer(canvas);
 const menu = new MenuManager();
+const background = new BackgroundRenderer('bg-canvas');
+background.start();
 
 const lancerBtn = document.getElementById('lancer-btn');
 const nicknameError = document.getElementById('nickname-error');
